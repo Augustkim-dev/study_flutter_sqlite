@@ -15,6 +15,14 @@ class ClearListApp extends StatefulWidget {
 class _ClearListAppState extends State<ClearListApp> {
   Future<List<Todo>>? clearList;
 
+  void _removeAllTodo() async {
+    final Database database = await widget.database;
+    database.rawDelete('delete from todos where active = 1');
+    setState(() {
+      clearList = getClearList();
+    });
+  }
+
   Future<List<Todo>> getClearList() async {
     final Database database = await widget.database;
     List<Map<String, dynamic>> maps = await database
@@ -84,6 +92,34 @@ class _ClearListAppState extends State<ClearListApp> {
             future: clearList,
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('완료한 일 삭제'),
+                  content: Text('완료한 일을 모두 삭제할까요?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(true);
+                        },
+                        child: Text('예')),
+                    TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(false);
+                        },
+                        child: Text('아니오')),
+                  ],
+                );
+              });
+          if (result == true) {
+            _removeAllTodo();
+          }
+        },
+        child: Icon(Icons.remove),
       ),
     );
   }
