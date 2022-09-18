@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -53,6 +51,7 @@ class _DatabaseAppState extends State<DatabaseApp> {
     });
   }
 
+  // todo 수정하기
   void _updateTodo(Todo todo) async {
     final Database database = await widget.db;
 
@@ -62,6 +61,17 @@ class _DatabaseAppState extends State<DatabaseApp> {
       where: 'id = ?',
       whereArgs: [todo.id],
     );
+    setState(() {
+      todoList = getTodos();
+    });
+  }
+
+  // todo 삭제하기
+  void _deleteTodo(Todo todo) async {
+    final Database database = await widget.db;
+
+    await database.delete('todos', where: 'id = ?', whereArgs: [todo.id]);
+
     setState(() {
       todoList = getTodos();
     });
@@ -104,32 +114,65 @@ class _DatabaseAppState extends State<DatabaseApp> {
                               ]),
                             ),
                             onTap: () async {
+                              TextEditingController controller =
+                                  TextEditingController(text: todo.content);
+
+                              Todo result = await showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text('${todo.id} : ${todo.title}'),
+                                    content: TextField(
+                                      controller: controller,
+                                      keyboardType: TextInputType.text,
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () {
+                                            todo.active == 1
+                                                ? todo.active = 0
+                                                : todo.active = 1;
+
+                                            todo.content =
+                                                controller.value.text;
+
+                                            Navigator.of(context).pop(todo);
+                                          },
+                                          child: Text('예')),
+                                      TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(todo);
+                                          },
+                                          child: Text('아니오')),
+                                    ],
+                                  );
+                                },
+                              );
+                              _updateTodo(result);
+                            },
+                            onLongPress: () async {
                               Todo result = await showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
                                     return AlertDialog(
                                       title: Text('${todo.id} : ${todo.title}'),
-                                      content: Text('Todo 체크하시겠습니까?'),
+                                      content:
+                                          Text('${todo.content}를 삭제하시겠습니까?'),
                                       actions: [
                                         TextButton(
                                             onPressed: () {
-                                              setState(() {
-                                                todo.active == 1
-                                                    ? todo.active = 0
-                                                    : todo.active = 1;
-                                              });
                                               Navigator.of(context).pop(todo);
                                             },
                                             child: Text('예')),
                                         TextButton(
                                             onPressed: () {
-                                              Navigator.of(context).pop(todo);
+                                              Navigator.of(context).pop();
                                             },
                                             child: Text('아니오')),
                                       ],
                                     );
                                   });
-                              _updateTodo(result);
+                              _deleteTodo(result);
                             },
                           );
                         },
