@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -51,6 +53,20 @@ class _DatabaseAppState extends State<DatabaseApp> {
     });
   }
 
+  void _updateTodo(Todo todo) async {
+    final Database database = await widget.db;
+
+    await database.update(
+      'todos',
+      todo.toMap(),
+      where: 'id = ?',
+      whereArgs: [todo.id],
+    );
+    setState(() {
+      todoList = getTodos();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,12 +87,50 @@ class _DatabaseAppState extends State<DatabaseApp> {
                     return ListView.builder(
                         itemBuilder: (context, index) {
                           Todo todo = (snapshot.data as List<Todo>)[index];
-                          return Card(
-                            child: Column(children: [
-                              Text(todo.title!),
-                              Text(todo.content!),
-                              Text('${todo.active == 1 ? 'true' : 'false'}'),
-                            ]),
+                          return ListTile(
+                            title: Text(
+                              todo.title!,
+                              style: TextStyle(fontSize: 20),
+                            ),
+                            subtitle: Container(
+                              child: Column(children: [
+                                Text(todo.content!),
+                                Text(
+                                    '체크 : ${todo.active == 1 ? 'true' : 'false'}'),
+                                Container(
+                                  height: 1,
+                                  color: Colors.blue,
+                                ),
+                              ]),
+                            ),
+                            onTap: () async {
+                              Todo result = await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text('${todo.id} : ${todo.title}'),
+                                      content: Text('Todo 체크하시겠습니까?'),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                todo.active == 1
+                                                    ? todo.active = 0
+                                                    : todo.active = 1;
+                                              });
+                                              Navigator.of(context).pop(todo);
+                                            },
+                                            child: Text('예')),
+                                        TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop(todo);
+                                            },
+                                            child: Text('아니오')),
+                                      ],
+                                    );
+                                  });
+                              _updateTodo(result);
+                            },
                           );
                         },
                         itemCount: (snapshot.data as List<Todo>).length);
