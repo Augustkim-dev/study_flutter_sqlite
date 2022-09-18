@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sql_sample/clearlist.dart';
 import 'addtodoapp.dart';
 import 'databaseapp.dart';
 import 'package:sqflite/sqflite.dart';
@@ -51,6 +52,9 @@ class MyApp extends StatelessWidget {
             ),
         '/add': (context) => AddTodoApp(
               db: database,
+            ),
+        '/clear': (context) => ClearListApp(
+              database: database,
             ),
       },
     );

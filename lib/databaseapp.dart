@@ -80,7 +80,22 @@ class _DatabaseAppState extends State<DatabaseApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Database Example')),
+      appBar: AppBar(
+        title: Text('Database Example'),
+        actions: [
+          TextButton(
+              onPressed: () async {
+                await Navigator.of(context).pushNamed('/clear');
+                setState(() {
+                  todoList = getTodos();
+                });
+              },
+              child: Text(
+                '완료한일',
+                style: TextStyle(color: Colors.white),
+              )),
+        ],
+      ),
       body: Container(
         child: Center(
           child: FutureBuilder(
